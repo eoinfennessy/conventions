@@ -154,9 +154,13 @@ maintainers triage.
 
 Maintainers, for this purpose, are members of the teams
 listed in `MAINTAINER_TEAMS` in
-`.github/workflows/issue-assignment-gate.yaml`. The
+`.github/workflows/issue-triage.yaml`. The
 `devs` team is intentionally *not* a maintainer team;
 developers are contributors here.
+
+Adding a milestone or a project board does not, on its
+own, triage an issue: only a maintainer can, and only by
+doing both.
 
 Contributors may self-assign an issue only when **both**
 of the following hold:
@@ -165,10 +169,16 @@ of the following hold:
 - Its priority is `Medium` or `Low`.
 
 Urgent and high-priority issues, and any un-triaged
-issue, must be assigned by a maintainer. If you assign
-yourself (or someone else) an issue that breaks these
-rules, the [issue assignment gate][gate] workflow
-reverts the assignment and comments explaining why. Ask
-a maintainer to triage or assign it instead.
+issue, must be assigned by a maintainer. If a
+non-maintainer self-assigns or otherwise moves an
+un-triaged issue (adds a milestone or a project board),
+the [issue triage][triage] workflow resets it: it
+removes every assignee, its milestone, and every project
+board, then comments explaining that a maintainer must
+triage the issue before it can be assigned or
+prioritized. For an issue that is already triaged,
+self-assigning urgent or high-priority work is reverted
+the same way. Ask a maintainer to triage or assign it
+instead.
 
-[gate]: ../.github/workflows/issue-assignment-gate.yaml
+[triage]: ../.github/workflows/issue-triage.yaml
