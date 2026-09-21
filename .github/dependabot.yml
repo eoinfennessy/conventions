@@ -16,7 +16,12 @@ updates:
           - patch
 
   - package-ecosystem: github-actions
-    directory: /
+    # Scan both the workflows and every local composite action, since a bare
+    # "/" only covers .github/workflows. These composite actions are consumed
+    # by other repos at a pinned SHA, so their pins must not go stale here.
+    directories:
+      - "/"
+      - "/.github/actions/*"
     cooldown:
       default-days: 7
     schedule:
