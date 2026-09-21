@@ -69,7 +69,10 @@ jobs:
 
       - name: Install cargo-machete
         if: steps.ws.outputs.empty == 'false' && steps.cache-machete.outputs.cache-hit != 'true'
-        run: cargo install cargo-machete --locked
+        # The shared rust-cache also restores ~/.cargo/bin, so the binary may
+        # already be present even when this step's own cache key misses. Install
+        # only when it is absent; otherwise cargo install aborts "binary exists".
+        run: command -v cargo-machete > /dev/null || cargo install cargo-machete --locked
 
       - name: Lint
         if: steps.ws.outputs.empty == 'false'
@@ -195,7 +198,9 @@ jobs:
 
       - name: Install cargo-hack
         if: steps.ws.outputs.empty == 'false' && steps.cache-hack.outputs.cache-hit != 'true'
-        run: cargo install cargo-hack --locked
+        # Guard against a binary the shared rust-cache already restored; see the
+        # cargo-machete install above.
+        run: command -v cargo-hack > /dev/null || cargo install cargo-hack --locked
 
       - name: Clippy each feature
         if: steps.ws.outputs.empty == 'false'
