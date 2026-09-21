@@ -133,11 +133,29 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Create draft pre-release
+      - name: Create or refresh the draft pre-release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}
-        run: gh release create "$TAG" --generate-notes --prerelease --draft
+        run: |
+          set -euo pipefail
+          # Make re-runs idempotent: refresh an existing draft, but never clobber
+          # a release a maintainer has already published.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            is_draft="$(gh release view "$TAG" --json isDraft --jq .isDraft)"
+            case "$is_draft" in
+              true) gh release delete "$TAG" --yes ;;
+              false)
+                echo "::notice::A published release already exists for $TAG; leaving it untouched."
+                exit 0
+                ;;
+              *)
+                echo "::error::Could not determine the release state for $TAG (got '$is_draft')."
+                exit 1
+                ;;
+            esac
+          fi
+          gh release create "$TAG" --generate-notes --prerelease --draft
 
   # ----------------------------------------------------------------------------
   # Phase 2 (draft published): build and publish the container image
@@ -170,6 +188,10 @@ jobs:
 
   crates-publish:
     if: github.event_name == 'release'
+    # A protected GitHub Environment lets a maintainer require reviewers and
+    # scope the publish token to just this job. crates.io OIDC trusted
+    # publishing is the recommended future replacement for a long-lived token.
+    environment: release
     needs: [container]
     runs-on: ubuntu-24.04
     timeout-minutes: 45
